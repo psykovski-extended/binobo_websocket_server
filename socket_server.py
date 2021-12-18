@@ -19,33 +19,30 @@ async def store_data(data, token):
         return False
 
     time_ = round(time.time() * 1000)
-
+    # TODO optimize, so that only one commit is needed
+    query = """INSERT INTO robot_data (
+                p_tip, p_middle, p_base, p_base_rot,
+                rf_tip, rf_middle, rf_base, rf_base_rot,
+                mf_tip, mf_middle, mf_base, mf_base_rot,
+                if_tip, if_middle, if_base, if_base_rot,
+                th_tip, th_base, th_rot_orthogonal, th_rot_palm,
+                wr_lr, wr_bf, data_access_token_id, uploaded_on,
+                expired, sampling_rate
+            ) VALUES
+            """
     for i in data:
-        print(i)
-        query = """INSERT INTO robot_data (
-            p_tip, p_middle, p_base, p_base_rot,
-            rf_tip, rf_middle, rf_base, rf_base_rot,
-            mf_tip, mf_middle, mf_base, mf_base_rot,
-            if_tip, if_middle, if_base, if_base_rot,
-            th_tip, th_base, th_rot_orthogonal, th_rot_palm,
-            wr_lr, wr_bf, data_access_token_id, uploaded_on,
-            expired, sampling_rate
-        ) VALUES (
-        """ + str(int(i[0])) + "," + str(int(i[1])) + "," + str(int(i[2])) + "," + str(int(i[3])) + "," + str(
-            int(i[4])) + "," + str(int(i[5])) + \
-                "," + str(int(i[6])) + "," + str(int(i[7])) + "," + str(int(i[8])) + "," + str(int(i[9])) + "," + str(
-            int(i[10])) + "," + \
-                str(int(i[11])) + "," + str(int(i[12])) + "," + str(int(i[13])) + "," + str(int(i[14])) + "," + str(
-            int(i[15])) + "," + \
-                str(int(i[16])) + "," + str(int(i[17])) + "," + str(int(i[18])) + "," + str(int(i[19])) + "," + str(
-            int(i[20])) + "," + \
-                str(int(i[21])) + "," + str(token_id) + "," + str(time_) + "," + "false" + "," + "30);"
+        query += "(" + str(int(i[0])) + "," + str(int(i[1])) + "," + str(int(i[2])) + "," + str(int(i[3])) + "," + str(
+            int(i[4])) + "," + str(int(i[5])) + "," + str(int(i[6])) + "," + str(int(i[7])) + "," + str(
+            int(i[8])) + "," + str(int(i[9])) + "," + str(int(i[10])) + "," + str(int(i[11])) + "," + str(
+            int(i[12])) + "," + str(int(i[13])) + "," + str(int(i[14])) + "," + str(int(i[15])) + "," + str(
+            int(i[16])) + "," + str(int(i[17])) + "," + str(int(i[18])) + "," + str(int(i[19])) + "," + str(
+            int(i[20])) + "," + str(int(i[21])) + "," + str(token_id) + "," + str(time_) + "," + "false" + "," + "30),"
 
-        try:
-            cursor.execute(query)
-            connection.commit()
-        except Exception:
-            return False
+    try:
+        cursor.execute(query[:-1] + ";")
+        connection.commit()
+    except Exception:
+        return False
 
     return True
 
