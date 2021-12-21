@@ -59,7 +59,7 @@ async def retrieve_data(websocket, path):
 async def main():
     ip = socket.gethostbyname(socket.gethostname())
     print("Websocket Server running on:\n" + ip + ":8080")
-    async with websockets.serve(retrieve_data, ip, 8080):
+    async with websockets.serve(retrieve_data, ip, 8080, ping_interval=None):
         await asyncio.Future()  # run forever
 
 
