@@ -1,6 +1,6 @@
 import asyncio
 import websockets
-import mysql.connector
+import psycopg2
 from ast import literal_eval
 import time
 import socket
@@ -19,7 +19,6 @@ async def store_data(data, token):
         return False
 
     time_ = round(time.time() * 1000)
-    # TODO optimize, so that only one commit is needed
     query = """INSERT INTO robot_data (
                 p_tip, p_middle, p_base, p_base_rot,
                 rf_tip, rf_middle, rf_base, rf_base_rot,
@@ -53,7 +52,7 @@ async def retrieve_data(websocket, path):
         try:
             await store_data(data[1], data[0])
         except Exception as exc:
-            websocket.send(str({'Error': str(exc)}))
+            await websocket.send(str({'Error': str(exc)}))
 
 
 async def main():
@@ -66,14 +65,14 @@ async def main():
 connection = None
 password = input("Your Database Password: ")
 try:
-    connection = mysql.connector.connect(host='localhost',
-                                         database='binobo_db',
-                                         user='root',
-                                         password=password)
-    while not connection.is_connected():
-        pass
+    connection = psycopg2.connect(host='localhost',
+                                  database='binobo_db',
+                                  user='postgres',
+                                  password=password,
+                                  port=3406)
+    time.sleep(1)
 
-    print("Database-Connection status: " + str(connection.is_connected()))
+    print("Database-Connection status: True")
 
     cursor = connection.cursor()
 except Exception as e:
