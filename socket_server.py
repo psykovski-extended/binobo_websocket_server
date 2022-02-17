@@ -20,29 +20,28 @@ async def store_data(data, token):
 
     time_ = round(time.time() * 1000)
     query = """INSERT INTO robot_data (
-                p_tip, p_middle, p_base, p_base_rot,
-                rf_tip, rf_middle, rf_base, rf_base_rot,
-                mf_tip, mf_middle, mf_base, mf_base_rot,
                 if_tip, if_middle, if_base, if_base_rot,
+                mf_tip, mf_middle, mf_base, mf_base_rot,
+                rf_tip, rf_middle, rf_base, rf_base_rot,
+                p_tip, p_middle, p_base, p_base_rot,
                 th_tip, th_base, th_rot_orthogonal, th_rot_palm,
                 wr_lr, wr_bf, data_access_token_id, uploaded_on,
                 expired, sampling_rate
             ) VALUES
             """
     for i in data:
-        query += "(" + str(int(i[0])) + "," + str(int(i[1])) + "," + str(int(i[2])) + "," + str(int(i[3])) + "," + str(
-            int(i[4])) + "," + str(int(i[5])) + "," + str(int(i[6])) + "," + str(int(i[7])) + "," + str(
-            int(i[8])) + "," + str(int(i[9])) + "," + str(int(i[10])) + "," + str(int(i[11])) + "," + str(
-            int(i[12])) + "," + str(int(i[13])) + "," + str(int(i[14])) + "," + str(int(i[15])) + "," + str(
-            int(i[16])) + "," + str(int(i[17])) + "," + str(int(i[18])) + "," + str(int(i[19])) + "," + str(
-            int(i[20])) + "," + str(int(i[21])) + "," + str(token_id) + "," + str(time_) + "," + "false" + "," + "30),"
+        query += "(" + str(i[0]) + "," + str(i[1]) + "," + str(i[2]) + "," + str(i[3]) + "," + str(
+            i[4]) + "," + str(i[5]) + "," + str(i[6]) + "," + str(i[7]) + "," + str(
+            i[8]) + "," + str(i[9]) + "," + str(i[10]) + "," + str(i[11]) + "," + str(
+            i[12]) + "," + str(i[13]) + "," + str(i[14]) + "," + str(i[15]) + "," + str(
+            i[16]) + "," + str(i[17]) + "," + str(i[18]) + "," + str(i[19]) + "," + str(
+            i[20]) + "," + str(i[21]) + "," + str(token_id) + "," + str(time_) + "," + "false" + "," + "30),"
 
     try:
         cursor.execute(query[:-1] + ";")
         connection.commit()
     except Exception:
         return False
-
     return True
 
 
@@ -56,20 +55,22 @@ async def retrieve_data(websocket, path):
 
 
 async def main():
-    ip = socket.gethostbyname(socket.gethostname())
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.connect(("8.8.8.8", 80))
+    ip = sock.getsockname()[0]
     print("Websocket Server running on:\n" + ip + ":8080")
     async with websockets.serve(retrieve_data, ip, 8080, ping_interval=None):
         await asyncio.Future()  # run forever
 
 
 connection = None
-password = input("Your Database Password: ")
+# password = input("Your Database Password: ")
 try:
-    connection = psycopg2.connect(host='localhost',
+    connection = psycopg2.connect(host='binobo_database',
                                   database='binobo_db',
                                   user='postgres',
-                                  password=password,
-                                  port=3406)
+                                  password="password",
+                                  port=5432)
     time.sleep(1)
 
     print("Database-Connection status: True")
@@ -77,5 +78,6 @@ try:
     cursor = connection.cursor()
 except Exception as e:
     print(e)
+    print("Database-Connection status: False")
 
 asyncio.run(main())
