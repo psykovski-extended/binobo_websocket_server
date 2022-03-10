@@ -2,10 +2,12 @@ import asyncio
 import websockets
 import socket
 
+from websockets.exceptions import ConnectionClosedError
+
 receiver_clients = {}
 
 
-async def add_to_receiver_clients(ws_client, message):
+async def handle_receiver_clients(ws_client, message):
     token = ws_client.path.split('/')[-1]
     if message == "close session":
         for client_index in range(len(receiver_clients[token])):
@@ -22,27 +24,30 @@ async def add_to_receiver_clients(ws_client, message):
 
 
 async def retrieve_data(websocket, path):
-    if websocket.path != '/':
-        async for message in websocket:
-            await add_to_receiver_clients(websocket, message)
-    else:
-        async for message in websocket:
-            data = eval(message)
-            try:
-                token = data[0]
-                robo_data = data[1]
-                clients_to_delete = []
-                for client_index in range(len(receiver_clients[token])):
-                    try:
-                        await receiver_clients[token][client_index].send(str(robo_data))
-                    except Exception as exc:
-                        print('error occurred: ' + str(exc))
-                        clients_to_delete.append([client_index])
-                clients_to_delete.reverse()
-                for i in clients_to_delete:
-                    del receiver_clients[token][i]
-            except Exception as exc:
-                await websocket.send(str({'Error': str(exc)}))
+    try:
+        if websocket.path != '/':
+            async for message in websocket:
+                await handle_receiver_clients(websocket, message)
+        else:
+            async for message in websocket:
+                data = eval(message)
+                try:
+                    token = data[0]
+                    robo_data = data[1]
+                    clients_to_delete = []
+                    for client_index in range(len(receiver_clients[token])):
+                        try:
+                            await receiver_clients[token][client_index].send(str(robo_data))
+                        except Exception as exc:
+                            print('error occurred: ' + str(exc))
+                            clients_to_delete.append([client_index])
+                    clients_to_delete.reverse()
+                    for i in clients_to_delete:
+                        del receiver_clients[token][i]
+                except Exception as exc:
+                    await websocket.send(str({'Error': str(exc)}))
+    except ConnectionClosedError:
+        print("Connection successfully closed: " + str(websocket))
 
 
 async def main():
